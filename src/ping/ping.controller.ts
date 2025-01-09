@@ -1,10 +1,12 @@
 import { Controller, Get, Query, Post, Body } from '@nestjs/common';
 import { PingResponseDto, PingBodyDto } from './dto/ping.dto';
 
+import { healthCheck } from '../util/helper';
 @Controller('ping')
 export class PingController {
   @Get()
   ping() {
+    healthCheck();
     return 'pong';
   }
 

@@ -1,10 +1,17 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { CreatePersonDto } from './dto/create-person.dto';
 import { UpdatePersonDto } from './dto/update-person.dto';
 
 import { AppDataSource } from '../data-source';
 import { Repository } from 'typeorm';
 import { Person } from './entities/person.entity';
+
+import { healthCheck } from '../util/helper';
+import { checkPersonExists } from '../util/existsChecker';
 
 @Injectable()
 export class PersonService {
@@ -14,18 +21,13 @@ export class PersonService {
     this.personRepository = AppDataSource.getRepository(Person);
   }
 
-  async create(
-    createPersonDto: CreatePersonDto,
-  ): Promise<Person | { statusCode: number; message: string }> {
-    const { name, point } = createPersonDto;
+  async create(createPersonDto: CreatePersonDto): Promise<Person> {
+    const { name, point = 0 } = createPersonDto;
 
     const person = this.personRepository.create({ name, point });
 
     if (!person) {
-      return {
-        statusCode: 500,
-        message: 'Person not created.',
-      };
+      throw new InternalServerErrorException('Person not created.');
     }
     return this.personRepository.save(person);
   }
@@ -36,7 +38,7 @@ export class PersonService {
 
   async findOne(id: number): Promise<Person> {
     const person = await this.personRepository.findOneBy({ id });
-    this.checkPersonExists(person, id);
+    checkPersonExists(person, id);
 
     return person;
   }
@@ -47,7 +49,7 @@ export class PersonService {
   ): Promise<Person> {
     const person = await this.personRepository.findOneBy({ id });
 
-    this.checkPersonExists(person, id);
+    checkPersonExists(person, id);
 
     Object.assign(person, updatePersonDto);
 
@@ -57,7 +59,7 @@ export class PersonService {
   async update(id: number, updatePersonDto: UpdatePersonDto): Promise<Person> {
     const person = await this.personRepository.findOneBy({ id });
 
-    this.checkPersonExists(person, id);
+    checkPersonExists(person, id);
 
     person.name = updatePersonDto.name || person.name;
     person.point = updatePersonDto.point || person.point;
@@ -76,7 +78,7 @@ export class PersonService {
       relations: ['posts'],
     });
 
-    this.checkPersonExists(person, id);
+    checkPersonExists(person, id);
 
     return person;
   }
