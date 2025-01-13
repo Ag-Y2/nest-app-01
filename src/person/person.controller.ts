@@ -7,21 +7,28 @@ import {
   Param,
   Delete,
   Put,
+  UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { PersonService } from './person.service';
 import { CreatePersonDto } from './dto/create-person.dto';
 import { UpdatePersonDto } from './dto/update-person.dto';
+
+import { ValidatePersonGuard } from 'src/guards/validatePerson.guard';
+import { LoggingInterceptor } from 'src/interceptors/logging.interceptor';
 
 @Controller('person')
 export class PersonController {
   constructor(private readonly personService: PersonService) {}
 
   @Post()
+  @UseGuards(ValidatePersonGuard)
   async create(@Body() createPersonDto: CreatePersonDto) {
     return this.personService.create(createPersonDto);
   }
 
   @Get()
+  @UseInterceptors(LoggingInterceptor)
   async findAll() {
     return this.personService.findAll();
   }

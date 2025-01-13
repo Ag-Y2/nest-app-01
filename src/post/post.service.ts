@@ -7,6 +7,9 @@ import { Repository } from 'typeorm';
 import { Post } from './entities/post.entity';
 import { Person } from '../person/entities/person.entity';
 
+import { healthCheck } from '../util/helper';
+import { checkPersonExists } from '../util/existsChecker';
+
 @Injectable()
 export class PostService {
   private postRepository: Repository<Post>;
@@ -23,9 +26,11 @@ export class PostService {
     const { title, content, personId } = createPostDto;
 
     const person = await this.personRepository.findOneBy({ id: personId });
-    if (!person) {
-      throw new NotFoundException(`Person with ID ${personId} not found`);
-    }
+    // if (!person) {
+    //   throw new NotFoundException(`Person with ID ${personId} not found`);
+    // }
+
+    checkPersonExists(person, personId);
 
     const post = this.postRepository.create({
       title,
@@ -38,7 +43,7 @@ export class PostService {
     if (!newPost) {
       return {
         statusCode: 500,
-        message: 'Post not created',
+        message: 'Failed to create post',
       };
     }
 
